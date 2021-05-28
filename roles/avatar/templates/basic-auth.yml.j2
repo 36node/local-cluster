@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth
+type: Opaque
+data:
+  auth: "{{ lookup('file', '/tmp/passwd') | b64encode | trim }}"

@@ -1,0 +1,65 @@
+---
+- name: Add timberio chart repo
+  community.kubernetes.helm_repository:
+    state: present
+    name: timberio
+    repo_url: "https://packages.timber.io/helm/latest"
+
+- name: Add bitnami chart repo
+  community.kubernetes.helm_repository:
+    state: present
+    name: bitnami
+    repo_url: "https://charts.bitnami.com/bitnami"
+
+- name: Deploy kafka 2.12-2.7.0
+  community.kubernetes.helm:
+    state: "{{ kafka_state }}"
+    name: kafka
+    namespace: "{{ namespace }}"
+    create_namespace: true
+    chart_ref: bitnami/kafka
+    chart_version: 12.12.0
+    values: "{{ lookup('template', 'kafka-values.yml.j2', variable_start_string='[%', variable_end_string='%]') | from_yaml | combine(kafka_chart_values, recursive=True) }}"
+    wait: yes
+    wait_timeout: 15m
+
+- name: Deploy elasticsearch
+  community.kubernetes.helm:
+    state: "{{ elasticsearch_state }}"
+    name: elasticsearch
+    namespace: "{{ namespace }}"
+    create_namespace: true
+    chart_ref: bitnami/elasticsearch
+    chart_version: 14.5.3
+    values: "{{ lookup('template', 'elasticsearch-values.yml.j2', variable_start_string='[%', variable_end_string='%]') | from_yaml | combine(elasticsearch_chart_values, recursive=True) }}"
+    wait: yes
+    wait_timeout: 15m
+
+- name: Add user to passwd
+  community.general.htpasswd:
+    path: /tmp/passwd
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+  with_items: "{{ kibana_basic_auth_users }}"
+
+- name: Create basic-auth secret
+  community.kubernetes.k8s:
+    state: "{{ elasticsearch_state }}"
+    namespace: "{{ namespace }}"
+    template: basic-auth.yml.j2
+
+- name: Create ingress
+  community.kubernetes.k8s:
+    state: "{{ elasticsearch_state }}"
+    namespace: "{{ namespace }}"
+    template: ingress.yml.j2
+
+- name: Deploy vector
+  community.kubernetes.helm:
+    state: "{{ vector_state }}"
+    name: vector
+    namespace: "{{ namespace }}"
+    create_namespace: true
+    chart_ref: timberio/vector-agent
+    chart_version: 0.12.1
+    values: "{{ lookup('template', 'vector-values.yml.j2', variable_start_string='[%', variable_end_string='%]') | from_yaml | combine(vector_chart_values, recursive=True) }}"

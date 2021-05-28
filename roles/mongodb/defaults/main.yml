@@ -1,0 +1,17 @@
+---
+namespace: data
+storage_class: "-"
+mongodb_state: present
+
+mongodb_auth_enabled: false
+mongodb_root_password: "it_is_a_secret"
+mongodb_storage_size: 8Gi
+
+## MongoDB(R) architecture. Allowed values: standalone or replicaset
+mongodb_architecture: "standalone"
+
+# Ignored when mongodb_architecture=standalone
+mongodb_replicas: 2
+
+# other chart values
+mongodb_chart_values: {}

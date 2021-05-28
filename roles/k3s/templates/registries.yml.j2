@@ -1,0 +1,34 @@
+mirrors:
+  "docker.io":
+    endpoint:
+      - "{{ aliyuncs.mirror }}"
+      - "https://registry-1.docker.io"
+  "registry.cn-beijing.aliyuncs.com":
+    endpoint:
+      - "https://registry.cn-beijing.aliyuncs.com"
+  "registry.cn-hongkong.aliyuncs.com":
+    endpoint:
+      - "https://registry.cn-hongkong.aliyuncs.com"
+  "registry.cn-hangzhou.aliyuncs.com":
+    endpoint:
+      - "https://registry.cn-hangzhou.aliyuncs.com"
+  "registry.ap-southeast-1.aliyuncs.com":
+    endpoint:
+      - "https://registry.ap-southeast-1.aliyuncs.com"
+configs:
+  "registry.cn-beijing.aliyuncs.com":
+    auth:
+      username: "{{ aliyuncs.username }}"
+      password: "{{ aliyuncs.password }}"
+  "registry.cn-hongkong.aliyuncs.com":
+    auth:
+      username: "{{ aliyuncs.username }}"
+      password: "{{ aliyuncs.password }}"
+  "registry.cn-hangzhou.aliyuncs.com":
+    auth:
+      username: "{{ aliyuncs.username }}"
+      password: "{{ aliyuncs.password }}"
+  "registry.ap-southeast-1.aliyuncs.com":
+    auth:
+      username: "{{ aliyuncs.username }}"
+      password: "{{ aliyuncs.password }}"

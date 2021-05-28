@@ -1,0 +1,61 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bus-log
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app: bus-log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-log
+spec:
+  selector:
+    matchLabels:
+      app: bus-log
+  replicas: {{ bus_log_replicas }}
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: bus-log
+        app: bus-log
+        vector.dev/enable: "true"
+    spec:
+      containers:
+        - name: bus-log
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-log:{{ bus_log_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20200424193000"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /log/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_log_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-log-consumer"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: LOG_LEVEL
+              value: info
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP

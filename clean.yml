@@ -1,0 +1,96 @@
+## 集群管理员执行
+---
+# - name: Uninstall things in k8s cluster
+#   hosts: localhost
+#   gather_facts: no
+#   vars:
+#     k8s_cluster_name: z-ctyun
+#   roles:
+#     - role: bus
+#       vars:
+#         bus_state: absent
+#         namespace: pudongbus2
+#         bus_admin_template: pudongbus
+#     - role: mongodb
+#       vars:
+#         mongodb_state: absent
+#         namespace: data
+#     - role: avatar
+#       tags:
+#         - avatar
+#       vars:
+#         namespace: avatar
+#         vector_state: absent
+#         kafka_state: absent
+#         elasticsearch_state: absent
+#   tasks:
+#     - name: Clear local kubeconfig
+#       block:
+#         - shell: kubectl config unset users.{{ k8s_cluster_name }}
+#         - shell: kubectl config unset contexts.{{ k8s_cluster_name }}
+#         - shell: kubectl config unset clusters.{{ k8s_cluster_name }}
+
+- name: Clean ceph
+  hosts: k8s
+  gather_facts: no
+  tasks:
+    - name: Check k3s-agent-uninstall.sh exists
+      become: yes
+      stat:
+        path: /usr/local/bin/k3s-agent-uninstall.sh
+      register: k3s_agent
+
+    - name: uninstall k3s agent
+      become: yes
+      shell: /usr/local/bin/k3s-agent-uninstall.sh
+      when: k3s_agent.stat.exists
+
+    - name: Check k3s-agent-uninstall.sh exists
+      become: yes
+      stat:
+        path: /usr/local/bin/k3s-uninstall.sh
+      register: k3s
+
+    - name: uninstall k3s
+      become: yes
+      shell: /usr/local/bin/k3s-uninstall.sh
+      when: k3s.stat.exists
+
+    - name: Clean ceph disk
+      become: yes
+      ansible.builtin.script:
+        cmd: scripts/init-ceph-disk.sh /dev/sdb
+      when: storage is defined and storage == "ceph"
+
+    - name: Remove rook directory
+      become: yes
+      ansible.builtin.file:
+        path: /var/lib/rook
+        state: absent
+
+    - name: Remove known-hosts by ip
+      throttle: 1
+      known_hosts:
+        name: "{{ ansible_host }}"
+        state: absent
+      delegate_to: localhost
+      tags: etchosts
+
+    - name: Remove known-hosts by name
+      throttle: 1
+      known_hosts:
+        name: "{{ inventory_hostname }}"
+        state: absent
+      delegate_to: localhost
+      tags: etchosts
+
+    - name: Change etchost
+      become: yes
+      throttle: 1
+      become_user: root
+      lineinfile:
+        dest: /etc/hosts
+        regexp: ".*\t{{ inventory_hostname }}.{{ cluster_domain }}\t{{ inventory_hostname }}"
+        state: absent
+      delegate_to: localhost
+      tags: etchosts

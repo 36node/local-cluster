@@ -1,0 +1,107 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bus-core
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app: bus-core
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-core
+spec:
+  replicas: {{ bus_core_replicas }}
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: bus-core
+  template:
+    metadata:
+      labels:
+        name: bus-core
+        app: bus-core
+        vector.dev/enable: "true"
+    spec:
+      containers:
+        - name: bus-core
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-core:{{ bus_core_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210316"
+            - name: WEATHER_UID
+              value: "P_C1SOmakwblq2KH5"
+            - name: WEATHER_KEY
+              value: "SDyhKcWSx9mpoG-aF"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /core/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_core_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-core-consumer"
+            - name: PRODUCERS_NAMESPACES
+              value: "{{ bus_producers_ns }}"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: KAFKA_EXT_EVENT_TOPIC
+              value: "{{ bus_ext_event_topic }}"
+            - name: STATISTICS_CACHE_PERIOD_S
+              value: "180"
+            - name: DRIVING_OVER_SPEED_WARN_LIMIT_KM_H_LIST
+              value: "/:100"
+            - name: DRIVING_OVER_SPEED_PENALTY_LIMIT_KM_H_LIST
+              value: "/:120"
+            - name: PUSH_IOS_PRODUCTION
+              value: "false"
+            - name: ENABLE_BATTERY_EXCEPTION
+              value: "true"
+            - name: ENABLE_INSULATION_EXCEPTION
+              value: "false"
+            - name: ENABLE_TYRE_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_SHOULD_OPEN_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_SHOULD_NOT_OPEN_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_SHOULD_NOT_OPEN_SPECIALCASE_EXCEPTION
+              value: "false"
+            - name: ENABLE_DRIVING_EXCEPTION
+              value: "false"
+            - name: ENABLE_TERMINAL_AIR_EXCEPTION
+              value: "false"
+            - name: ENABLE_TERMINAL_BATTERY_EXCEPTION
+              value: "true"
+            - name: ENABLE_DCDC_EXCEPTION
+              value: "false"
+            - name: ALLOW_WRONG_INFO_TYPES
+              value: "zz"
+            - name: IGNORE_VINS
+              value: "00000000000000001;00000000000000002"
+            - name: REALTIME_THRESHOLD
+              value: "70"
+            - name: LOG_LEVEL
+              value: info
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP

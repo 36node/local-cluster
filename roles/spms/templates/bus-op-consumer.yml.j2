@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-op-consumer
+spec:
+  selector:
+    matchLabels:
+      app: bus-op-consumer
+  replicas: {{ bus_op_consumer_replicas }}
+  template:
+    metadata:
+      labels:
+        name: bus-op-consumer
+        app: bus-op-consumer
+    spec:
+      containers:
+        - name: bus-op-consumer
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-op:{{ bus_op_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210321"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /op/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_op_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-op-consumer"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: SEND_EVENT_DIRECTLY
+              value: "true"
+            - name: LOG_LEVEL
+              value: warn
+            - name: AIR_EXCEPTION_EVENT_HANDLER_ON
+              value: "false"
+            - name: DRIVING_EXCEPTION_EVENTHANDLER_ON
+              value: "false"
+            - name: DCDC_EXCEPTION_EVENT_HANDLER_ON
+              value: "false"
+            - name: NODE_ENV
+              value: "production"
+          command: ["npm"]
+          args: ["run", "consumer"]

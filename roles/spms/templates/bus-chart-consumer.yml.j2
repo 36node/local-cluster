@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-chart-consumer
+spec:
+  selector:
+    matchLabels:
+      app: bus-chart-consumer
+  replicas: {{ bus_chart_consumer_replicas }}
+  template:
+    metadata:
+      labels:
+        name: bus-chart-consumer
+        app: bus-chart-consumer
+    spec:
+      containers:
+        - name: bus-chart-consumer-consumer
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-chart:{{ bus_chart_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210321"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /chart/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_chart_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-chart-consumer"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: ES_HOST
+              value: "{{ elasticsearch_endpoint }}"
+            - name: ES_INDEX_SUFFIX
+              value: "{{ bus_chart_es_index_suffix }}"
+            - name: ES_INDEX_TBOX_LOGDASH_INDEX
+              value: "{{ bus_tbox_es_index }}"
+            - name: bus_core_endpoint
+              value: "{{ bus_core_endpoint }}"
+            - name: BUS_CORE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bus-auth
+                  key: auth_token
+            - name: bus_op_endpoint
+              value: "{{ bus_op_endpoint }}"
+            - name: BUS_OP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bus-auth
+                  key: auth_token
+            - name: AUTH_BASE
+              value: "{{ bus_auth_endpoint }}"
+            - name: AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bus-auth
+                  key: auth_token
+            - name: LOG_LEVEL
+              value: info
+          command: ["npm"]
+          args: ["run", "consumer"]

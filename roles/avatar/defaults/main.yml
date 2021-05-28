@@ -1,0 +1,28 @@
+---
+namespace: data
+storage_class: "-"
+cert_issuer: "letsencrypt-http"
+
+## vector
+vector_state: present
+kafka_bootstrap_server: "kafka.{{ namespace }}:9092" # required
+elasticsearch_endpoint: "http://elasticsearch-coordinating-only.{{ namespace }}:9200" # required
+
+## kafka
+kafka_state: present
+kafka_replicas: 1
+kafka_storage_size: 8Gi
+
+## elasticsearch
+elasticsearch_state: present
+elasticsearch_master_replicas: 2
+elasticsearch_data_replicas: 2
+elasticsearch_master_storage_size: 8Gi
+elasticsearch_data_storage_size: 8Gi
+kibana_basic_auth_users:
+  - {name: "walle", password: "hello"}
+
+# other chart values
+vector_chart_values: {}
+elasticsearch_chart_values: {}
+kafka_chart_values: {}

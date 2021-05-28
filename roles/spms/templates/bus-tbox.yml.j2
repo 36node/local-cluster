@@ -1,0 +1,55 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bus-tbox
+spec:
+  type: LoadBalancer
+  ports:
+    - name: tcp
+      port: {{ bus_tbox_port }}
+      targetPort: {{ bus_tbox_port }}
+      protocol: TCP
+  selector:
+    app: bus-tbox
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-tbox
+spec:
+  replicas: {{ bus_tbox_replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: bus-tbox
+  template:
+    metadata:
+      labels:
+        name: bus-tbox
+        app: bus-tbox
+        vector.dev/enable: "true"
+        vector.dev/topic: "{{ bus_tbox_topic }}"
+    spec:
+      containers:
+        - name: bus-tbox
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-tbox:{{ bus_tbox_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210317"
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: PORT
+              value: "{{ bus_tbox_port }}"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: AUTH
+              value: "{{ bus_tbox_auth }}"
+          ports:
+            - name: tcp
+              containerPort: {{ bus_tbox_port }}
+              protocol: TCP

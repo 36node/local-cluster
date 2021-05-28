@@ -1,0 +1,95 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bus-admin
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: bus-admin
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-admin
+spec:
+  replicas: 2
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: bus-admin
+  template:
+    metadata:
+      labels:
+        name: bus-admin
+        app: bus-admin
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: bus-admin
+          image: registry.cn-hongkong.aliyuncs.com/36node/bus-admin:{{ bus_admin_version }}
+          imagePullPolicy: "Always"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20200617120500"
+            - name: REACT_APP_WEATHER_BASE
+              value: https://api.pudong.36node.com/core/v0
+            - name: REACT_APP_WEATHER_LOCATION
+              value: "上海"
+            - name: REACT_APP_BUS_CORE_BASE
+              value: "{{ bus_core_endpoint }}"
+            - name: REACT_APP_BUS_OP_BASE
+              value: "{{ bus_op_endpoint }}"
+            - name: REACT_APP_LOG_WS
+              value: "{{ bus_log_endpoint }}"
+            - name: REACT_APP_BUS_LOG_WS
+              value: "{{ bus_log_ws_endpoint }}"
+            - name: REACT_APP_BUS_CHART_BASE
+              value: "{{ bus_chart_endpoint }}"
+            - name: REACT_APP_BUS_PILE_BASE
+              value: "{{ bus_pile_endpoint }}"
+            - name: REACT_APP_AUTH_BASE
+              value: "{{ bus_auth_endpoint }}"
+            - name: REACT_APP_AUTH_PROVIDER
+              value: "{{ bus_auth_provider }}"
+            - name: REACT_APP_APP_TITLE
+              value: "{{ bus_admin_title }}"
+            - name: REACT_APP_ROOT_NAMESPACE
+              value: "{{ bus_auth_ns }}"
+            - name: REACT_APP_PRODUCERS_NAMESPACES
+              value: "{{ bus_producers_ns }}"
+            - name: REACT_APP_SYSTEM_START_DATE
+              value: "2019-08-10"
+            - name: REACT_APP_ALERT_SUMMARY_IN_MS
+              value: "9000"
+            - name: REACT_APP_VEHICLE_UPDATE_IN_MS
+              value: "10500"
+            - name: REACT_APP_MAP_DATA_IN_MS
+              value: "11000"
+            - name: REACT_APP_MAP_MAX_VEHICLES
+              value: "3000"
+            - name: REACT_APP_MAP_MAX_ALERTS
+              value: "10000"
+            - name: REACT_APP_MAX_TICKETS_LIMIT
+              value: "200"
+            - name: REACT_APP_REALTIME_ALERT_AGING_H
+              value: "24"
+            - name: REACT_APP_GA_UA_ID
+              value: UA-149003115-3
+            - name: REACT_APP_REALTIME_THRESHOLD
+              value: "70"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP

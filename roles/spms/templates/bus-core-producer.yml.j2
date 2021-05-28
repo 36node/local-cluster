@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-core-producer
+spec:
+  selector:
+    matchLabels:
+      app: bus-core-producer
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  replicas: {{ bus_core_producer_replicas }}
+  template:
+    metadata:
+      labels:
+        name: bus-core-producer
+        app: bus-core-producer
+        vector.dev/enable: "true"
+    spec:
+      containers:
+        - name: bus-core-producer
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-core:{{ bus_core_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210322"
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_core_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-core-producer"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: KAFKA_EXT_EVENT_TOPIC
+              value: "{{ bus_ext_event_topic }}"
+            - name: PUSH_IOS_PRODUCTION
+              value: "false"
+            - name: PUBLISHER_IDLE_DELAY_MS
+              value: "2000"
+            - name: PUBLISHER_VEHICLE_SNAPSHOT_INTERVAL_H
+              value: "3"
+            - name: LOG_LEVEL
+              value: info
+            - name: DCDC_EXCEPTION_EVENT_HANDLER_ON
+              value: "false"
+          command: ["npm"]
+          args: ["run", "producer"]

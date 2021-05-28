@@ -1,0 +1,35 @@
+---
+- name: Update /etc/vimrc
+  become: yes
+  blockinfile:
+    path: /etc/vimrc
+    marker: '" {mark} ANSIBLE MANAGED BLOCK'
+    block: |
+      set fileencodings=utf-8,gbk,utf-16le,cp1252,iso-8859-15,ucs-bom
+      set termencoding=utf-8
+      set encoding=utf-8
+
+- name: Set timezone
+  become: yes
+  community.general.timezone:
+    name: Asia/Shanghai
+
+- name: Set hostname
+  become: yes
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Make sure we have a 'wheel' group
+  become: yes
+  group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  become: yes
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^%wheel"
+    line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+    validate: visudo -cf %s

@@ -1,0 +1,58 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bus
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    cert-manager.io/cluster-issuer: "{{ cert_issuer }}"
+    # traefik.ingress.kubernetes.io/redirect-entry-point: https
+spec:
+  rules:
+    - host: "{{ domain }}"
+      http:
+        paths:
+          - backend:
+              serviceName: bus-admin
+              servicePort: 80
+            path: /
+    - host: api.{{ domain }}
+      http:
+        paths:
+          - backend:
+              serviceName: bus-core
+              servicePort: 80
+            path: /core
+    - host: api.{{ domain }}
+      http:
+        paths:
+          - backend:
+              serviceName: bus-chart
+              servicePort: 80
+            path: /chart
+    - host: api.{{ domain }}
+      http:
+        paths:
+          - backend:
+              serviceName: bus-log
+              servicePort: 80
+            path: /log
+    - host: api.{{ domain }}
+      http:
+        paths:
+          - backend:
+              serviceName: bus-op
+              servicePort: 80
+            path: /op
+    - host: api.{{ domain }}
+      http:
+        paths:
+          - backend:
+              serviceName: bus-pile
+              servicePort: 80
+            path: /pile
+  tls:
+    - secretName: "{{ domain }}"
+      hosts:
+        - "{{ domain }}"
+        - "*.{{ domain }}"

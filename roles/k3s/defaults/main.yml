@@ -1,0 +1,12 @@
+---
+master_group: masters
+worker_group: workers
+
+k8s_cluster_name: myk3s
+k8s_lb:
+
+# aliyuncs required, change username and password
+aliyuncs:
+  username:
+  password:
+  mirror:

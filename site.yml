@@ -1,0 +1,70 @@
+## 集群管理员执行
+---
+- name: Setup k8s cluster
+  hosts: k8s
+  gather_facts: false
+  roles:
+    - common
+    - etchost
+
+    - role: k3s
+      vars:
+        k8s_cluster_name: catl
+        k8s_lb: 10.38.57.149
+        aliyuncs:
+          username: "{{ lookup('env','ALIYUNCS_USER') }}"
+          password: "{{ lookup('env','ALIYUNCS_PASSWORD') }}"
+          mirror: https://zh0vhvl1.mirror.aliyuncs.com
+
+- name: Setup cluster infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    mongodb_connection: "mongo://root:{{ lookup('env','MONGODB_ROOT_PASSWORD') }}@mongodb.data"
+    kafka_bootstrap_server: kafka.avatar:9092
+    elasticsearch_endpoint: http://elasticsearch-coordinating-only.avatar:9200
+
+  roles:
+    - role: ceph-csi
+      tags:
+        - ceph
+      vars:
+        ceph_state: present
+        namespace: rook-ceph
+        ceph_device: sdb
+        # ceph_toolbox_state: absent
+    - role: avatar
+      tags:
+        - avatar
+      vars:
+        namespace: avatar
+        vector_state: present
+        kafka_replicas: 2
+        kafka_storage_size: 20Gi
+        elasticsearch_master_replicas: 1
+        elasticsearch_data_replicas: 1
+        elasticsearch_master_storage_size: 10Gi
+        elasticsearch_data_storage_size: 200Gi
+        ## TODO: 提升统一 auth， https://github.com/dignajar/another-ldap-auth
+        kibana_basic_auth_users:
+          - name: "zzs"
+            password: "{{ lookup('env','BASIC_AUTH_ZZS_PASSWD') }}"
+          - name: "chenchen"
+            password: "{{ lookup('env','BASIC_AUTH_CHENCHEN_PASSWD') }}"
+
+    - role: mongodb
+      tags:
+        - mongodb
+      vars:
+        namespace: data
+        mongodb_state: present
+        mongodb_storage_size: 200Gi
+        mongodb_chart_values:
+          architecture: standalone
+          auth:
+            enabled: true
+            rootPassword: "{{ lookup('env','MONGODB_ROOT_PASSWORD') }}"
+# #
+# - name: spms system
+#   import_playbook: spms.yml

@@ -1,0 +1,77 @@
+version: 2
+
+defaults: &defaults
+  working_directory: ~/repo
+  environment:
+    TZ: "Asia/Shanghai"
+  docker:
+    - image: miffyliye/kubectl:2.1.0
+
+jobs:
+  deploy:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: bootstrap
+          command: |
+            /bin/bash /usr/local/bin/docker_entrypoint.sh
+            bin/bootstrap.sh
+
+  refresh:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: update
+          command: |
+            /bin/bash /usr/local/bin/docker_entrypoint.sh
+            SHOULD_REFRESH=true bin/bootstrap.sh
+
+  dns:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: install aliyun-cli
+          command: |
+            curl -o aliyun-cli.tgz https://aliyuncli.alicdn.com/aliyun-cli-linux-3.0.20-amd64.tgz
+            tar xzvf aliyun-cli.tgz
+            cp aliyun /bin
+      - run:
+          name: install jq
+          command: |
+            curl -o jq https://stedolan.github.io/jq/download/linux64/jq
+            chmod +x jq
+            cp jq /bin
+      - run:
+          name: update dns
+          command: |
+            /bin/bash bin/dns.sh
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - deploy:
+          context: aliyun
+          filters:
+            branches:
+              only:
+                - main
+      - dns:
+          context: aliyun
+          filters:
+            branches:
+              only:
+                - main
+  monthly:
+    triggers:
+      - schedule:
+          cron: "0 0 1 * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - refresh

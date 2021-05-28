@@ -1,0 +1,5 @@
+---
+- name: Restart rc-local
+  ansible.builtin.systemd:
+    state: restarted
+    name: rc-local

@@ -1,0 +1,65 @@
+---
+## 如果用 docker 的话，需要打开这个，另外在 master 和 worker 的安装中添加 k3s-extra-args
+# - name: Download docker script
+#   get_url:
+#     url: https://releases.rancher.com/install-docker/19.03.sh
+#     dest: /tmp/install-docker.sh
+#     mode: u+wx
+
+# - name: Install docker
+#   shell: /tmp/install-docker.sh
+
+- name: Setup masters
+  include_tasks: master.yml
+  when: inventory_hostname in groups[master_group]
+
+- name: Setup Workers
+  include_tasks: worker.yml
+  when: inventory_hostname in groups[worker_group]
+
+## k3s 配置 containerd 登录 private registry
+#
+- name: Create folder /etc/rancher/k3s
+  become: yes
+  file:
+    path: /etc/rancher/k3s
+    state: directory
+
+- name: Private registry
+  become: yes
+  template:
+    src: registries.yml.j2
+    dest: /etc/rancher/k3s/registries.yml
+    force: yes
+  register: registry_result
+
+- name: Restart k3s service
+  become: yes
+  systemd:
+    name: k3s
+    daemon_reload: yes
+    state: restarted
+    enabled: yes
+  when: registry_result is changed and inventory_hostname in groups[master_group]
+
+- name: Restart k3s-agent service
+  become: yes
+  systemd:
+    name: k3s-agent
+    daemon_reload: yes
+    state: restarted
+    enabled: yes
+  when: registry_result is changed and inventory_hostname in groups[worker_group]
+
+- name: Label node
+  community.kubernetes.k8s:
+    state: present
+    definition:
+      apiversion: v1
+      kind: Node
+      metadata:
+        name: "{{ inventory_hostname }}"
+        labels:
+          node.kubernetes.io/storage: "{{ storage | default(omit) }}"
+          node.kubernetes.io/specs: "{{ specs | default(omit) }}"
+  delegate_to: localhost

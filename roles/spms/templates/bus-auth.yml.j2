@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: "bus-auth"
+data:
+  auth_token: "{{ bus_auth_jwt | b64encode }}"

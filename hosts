@@ -1,0 +1,50 @@
+###############################################################
+# 规格说明 s表示通用型 c表示通用计算增强型　m表示内存优化型
+#
+# m6.2xlarge.8: bandwidth=4.5/15 intranet_contract=1.5M
+# s6.xlarge.4: bandwidth=2/6 intranet_contract=1M
+# s6.4xlarge.2: bandwidth=2/6 intranet_contract=1M
+# s6.4xlarge.4: bandwidth=2/6 intranet_contract=1M
+##############################################################
+
+[all:vars]
+ansible_user=user01
+
+## ansible 默认的 key file
+ansible_ssh_private_key_file="{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEY_FILE') }}"
+
+## 全局的域名，供外部访问时使用
+domain=k8s.local
+
+## 本地集群使用的域名
+cluster_domain=k8s.local
+
+## k8s 块存储类别
+storage_class=local-path
+
+## cert-manager 的方式
+cert_issuer=letsencrypt-alidns
+
+## lxc 容器模板, TODO: openwrt 安装自动化
+lxc_openwrt_tpl=images:vztmpl/ubuntu-18.04-standard_18.04.1-1_amd64.tar.gz
+
+## python 版本
+ansible_python_interpreter=/usr/bin/python3
+
+## 需要 sudo 时候的密码
+ansible_become_pass="{{ lookup('env','ANSIBLE_BECOME_PASS') }}"
+
+## aliyun cli && sdk
+ali_key="{{ lookup('env','ALI_KEY') }}"
+ali_secret="{{ lookup('env','ALI_SECRET') }}"
+
+[k8s:children]
+masters
+workers
+
+[masters]
+master-01 ansible_host=10.38.57.149 cores=8 memory=32G sda=100G sdb=500G os=centos8 storage=ceph
+
+[workers]
+worker-01 ansible_host=10.38.57.150 cores=8 memory=32G sda=100G sdb=500G os=centos8 storage=ceph
+worker-02 ansible_host=10.38.57.151 cores=8 memory=32G sda=100G sdb=500G os=centos8 storage=ceph

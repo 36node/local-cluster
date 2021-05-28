@@ -1,0 +1,65 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: bus-chart-sync
+spec:
+  schedule: "0 1 1 1 *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            feature: "app"
+            ns: "prod"
+          imagePullSecrets:
+            - name: aliyuncs
+          containers:
+            - name: bus-chart-sync
+              image: "registry.cn-hongkong.aliyuncs.com/36node/bus-chart:{{ bus_chart_version }}"
+              env:
+                - name: MANUAL_UPDATE
+                  value: "20210321"
+                - name: PORT
+                  value: "3000"
+                - name: BASE
+                  value: /chart/v0
+                - name: MONGODB_CONNECTION
+                  value: "{{ bus_chart_mongodb }}"
+                - name: ES_HOST
+                  value: "{{ elasticsearch_endpoint }}"
+                - name: ES_INDEX_SUFFIX
+                  value: "{{ bus_chart_es_index_suffix }}"
+                - name: ES_INDEX_TBOX_LOGDASH_INDEX
+                  value: "{{ bus_tbox_es_index }}"
+                - name: bus_core_endpoint
+                  value: "{{ bus_core_endpoint }}"
+                - name: BUS_CORE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: bus-auth
+                      key: auth_token
+                - name: bus_op_endpoint
+                  value: "{{ bus_op_endpoint }}"
+                - name: BUS_OP_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: bus-auth
+                      key: auth_token
+                - name: AUTH_BASE
+                  value: "{{ bus_auth_endpoint }}"
+                - name: AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: bus-auth
+                      key: auth_token
+                - name: LOG_LEVEL
+                  value: info
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - "node dist/sync-tickets.js"
+          restartPolicy: Never

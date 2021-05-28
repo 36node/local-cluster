@@ -1,0 +1,59 @@
+- name: Setup cluster infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    namespace: pudonghuabo
+    domain: pudonghuabo.36node.com
+    mongodb_connection: "mongodb://root:{{ lookup('env','MONGODB_ROOT_PASSWORD') }}@mongodb.data"
+
+  roles:
+    - role: alidns
+      tags:
+        - dns
+      vars:
+        alidns_records:
+          - 36node.com pudonghuabo 218.78.25.41 A
+          - 36node.com *.pudonghuabo 218.78.25.41 A
+
+    - role: bus
+      tags:
+        - bus
+      vars:
+        bus_state: present # present: 安装或者修改，absent 卸载
+        bus_admin_template: pudongbus
+        bus_admin_title: "浦东公交"
+        bus_admin_version: v0.36.0
+        bus_auth_endpoint: "https://api.stargate.36node.com/auth/v0"
+        bus_auth_jwt: "{{ lookup('env','PUDONGBUS_BUS_AUTH_JWT') }}"
+        bus_auth_ns: /bus/shanghai/pudong
+        bus_auth_provider: 5dc3beadccf89e00123c4dcc
+        bus_chart_consumer_replicas: 2
+        bus_chart_endpoint: https://api.pudonghuabo.36node.com/chart/v0
+        bus_chart_es_index_suffix: chart-pudonghuabo
+        bus_chart_replicas: 2
+        bus_chart_version: v0.1.1
+        bus_core_consumer_replicas: 2
+        bus_core_endpoint: https://api.pudonghuabo.36node.com/core/v0
+        bus_core_producer_replicas: 2
+        bus_core_replicas: 2
+        bus_core_version: v0.17.4
+        bus_event_topic: event
+        bus_ext_event_topic: ext-event
+        bus_log_consumer_replicas: 2
+        bus_log_endpoint: https://api.pudonghuabo.36node.com/log/v0
+        bus_log_ws_endpoint: https://api.pudonghuabo.36node.com/log/v0/ws
+        bus_log_replicas: 1
+        bus_log_version: v0.2.1
+        bus_op_consumer_replicas: 2
+        bus_op_endpoint: https://api.pudonghuabo.36node.com/op/v0
+        bus_op_producer_replicas: 2
+        bus_op_replicas: 2
+        bus_op_version: v0.11.0
+        bus_pile_endpoint: https://api.pudonghuabo.36node.com/pile/v0
+        bus_pile_version: 617fdb962100e4518ea80cd1e730a30be2323442
+        bus_pile_replicas: 2
+        bus_producers_ns: "申龙:/bus/producer/shenlong;申沃:/bus/producer/shenwo;万象:/bus/producer/wanxiang;宇通:/bus/producer/yutong;青年:/bus/producer/qingnian"
+        bus_tbox_auth: "wushiling:314159,jiangling:265358,linde:979323,zznissan:846264,saicvs:338327,weima:950288,jinlong:419716,saicrw:939937,saicdt:510582,guangtai:097494,byd:459230,tengda:781640,futian:628620,hangfu:899862,yutong:375121"
+        bus_tbox_replicas: 2
+        bus_tbox_version: v0.6.6

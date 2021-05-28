@@ -1,0 +1,6 @@
+---
+user: walle
+pub_key: xxxxxxxxxxxxxxxxx
+generate_ssh_key: no
+sudo_enable: no
+shell: /bin/bash

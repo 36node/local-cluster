@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-core-consumer
+spec:
+  selector:
+    matchLabels:
+      app: bus-core-consumer
+  replicas: {{ bus_core_consumer_replicas }}
+  template:
+    metadata:
+      labels:
+        name: bus-core-consumer
+        app: bus-core-consumer
+        vector.dev/enable: "true"
+    spec:
+      containers:
+        - name: bus-core-consumer
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-core:{{ bus_core_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210321"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /core/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_core_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-core-consumer"
+            - name: PUSH_IOS_PRODUCTION
+              value: "false"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: KAFKA_EXT_EVENT_TOPIC
+              value: "{{ bus_ext_event_topic }}"
+            - name: DRIVING_OVER_SPEED_WARN_LIMIT_KM_H_LIST
+              value: "/:100"
+            - name: DRIVING_OVER_SPEED_PENALTY_LIMIT_KM_H_LIST
+              value: "/:120"
+            - name: ENABLE_BATTERY_EXCEPTION
+              value: "true"
+            - name: ENABLE_INSULATION_EXCEPTION
+              value: "false"
+            - name: ENABLE_TYRE_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_SHOULD_OPEN_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_SHOULD_NOT_OPEN_EXCEPTION
+              value: "false"
+            - name: ENABLE_AIR_SHOULD_NOT_OPEN_SPECIALCASE_EXCEPTION
+              value: "false"
+            - name: ENABLE_DRIVING_EXCEPTION
+              value: "false"
+            - name: ENABLE_TERMINAL_AIR_EXCEPTION
+              value: "false"
+            - name: ENABLE_TERMINAL_BATTERY_EXCEPTION
+              value: "true"
+            - name: ENABLE_TERMINAL_MILEAGE_EXCEPTION
+              value: "false"
+            - name: ENABLE_TERMINAL_TYRE_EXCEPTION
+              value: "false"
+            - name: ENABLE_DCDC_EXCEPTION
+              value: "false"
+            - name: ALLOW_WRONG_INFO_TYPES
+              value: "zz"
+            - name: IGNORE_VINS
+              value: "00000000000000001;00000000000000002;AAAAAAAA000000001"
+            - name: REALTIME_THRESHOLD
+              value: "70"
+            - name: SEND_EVENT_DIRECTLY
+              value: "true"
+            - name: LOG_LEVEL
+              value: warn
+            - name: NODE_ENV
+              value: "production"
+          command: ["npm"]
+          args: ["run", "consumer"]

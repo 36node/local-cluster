@@ -1,0 +1,103 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bus-admin
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: bus-admin
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-admin
+spec:
+  replicas: 2
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: bus-admin
+  template:
+    metadata:
+      labels:
+        name: bus-admin
+        app: bus-admin
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: bus-admin
+          image: registry.cn-hongkong.aliyuncs.com/36node/bus-admin-shanghaibus:{{ bus_admin_version }}
+          imagePullPolicy: "Always"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20201207224601"
+            - name: REACT_APP_VEHICLES_MAX
+              value: "10000"
+            - name: REACT_APP_BASE_TITLE
+              value: "{{ bus_admin_title }}"
+            - name: REACT_APP_LOGO
+              value: "{{ bus_logo }}"
+            - name: REACT_APP_AMAP_CENTER
+              value: "{{ bus_amap_center }}"
+            - name: REACT_APP_OVERVIEW_SWITCH
+              value: "on"
+            - name: REACT_APP_MONITOR_EXCEPTION_DCDC
+              value: "off"
+            - name: REACT_APP_MENU_PILE
+              value: "off"
+            - name: REACT_APP_MENU_BATTERY
+              value: "off"
+            - name: REACT_APP_MENU_CHARGING
+              value: "off"
+            - name: REACT_APP_MENU_SAFE
+              value: "off"
+            - name: REACT_APP_MENU_ENERGY
+              value: "off"
+            - name: REACT_APP_MENU_VEHICLE_MAINTENANCE
+              value: "off"
+            - name: REACT_APP_MENU_VEHICLE_SOH
+              value: "off"
+            - name: REACT_APP_MENU_VEHICLE_REPLAY
+              value: "off"
+            - name: REACT_APP_MENU_VEHICLE_MILEAGE
+              value: "off"
+            - name: REACT_APP_OFFLINE_THRESHOLD
+              value: "5400000"
+            - name: REACT_APP_CORE_BASE
+              value: "{{ bus_core_endpoint }}"
+            - name: REACT_APP_OP_BASE
+              value: "{{ bus_op_endpoint }}"
+            - name: REACT_APP_LOG_BASE
+              value: "{{ bus_log_endpoint }}"
+            - name: REACT_APP_LOG_WS
+              value: "{{ bus_log_ws_endpoint }}"
+            - name: REACT_APP_CHART_BASE
+              value: "{{ bus_chart_endpoint }}"
+            - name: REACT_APP_AUTH_BASE
+              value: "{{ bus_auth_endpoint }}"
+            - name: REACT_APP_BUS_PILE_BASE
+              value: "{{ bus_pile_endpoint }}"
+            - name: REACT_APP_AUTH_PROVIDER
+              value: "{{ bus_auth_provider }}"
+            - name: REACT_APP_ROOT_NS
+              value: "{{ bus_auth_ns }}"
+            - name: REACT_APP_PRODUCERS_NAMESPACES
+              value: "{{ bus_producers_ns }}"
+            - name: REACT_APP_APP_ANDROID_DOWNLOAD_QRCODE
+              value: data:image/png;base64,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
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP

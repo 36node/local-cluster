@@ -1,0 +1,48 @@
+{
+  "name": "catl-spms-devops",
+  "version": "0.0.0+HEAD",
+  "description": "catl spms devops",
+  "repository": {
+    "url": "catl-spms/devops",
+    "type": "git"
+  },
+  "scripts": {
+    "postinstall": "ansible-galaxy install -r requirements.yml",
+    "format": "prettier --write './**/*.{js,yml}'",
+    "release": "standard-version",
+    "auth": "dotenv ansible-playbook auth.yml",
+    "site": "dotenv ansible-playbook site.yml",
+    "site:spms": "dotenv ansible-playbook spms.yml",
+    "jumper": "dotenv ansible-playbook jumper.yml",
+    "clean": "dotenv ansible-playbook clean.yml",
+    "test": "dotenv ansible-playbook test.yml"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -e $GIT_PARAMS",
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.md": [
+      "npm run format",
+      "git add"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "dotenv": "^8.2.0",
+    "esm": "^3.2.25",
+    "husky": "^6.0.0",
+    "lint-staged": "^10.0.8",
+    "prettier": "^2.0.5",
+    "standard-version": "^8.0.0"
+  },
+  "dependencies": {}
+}

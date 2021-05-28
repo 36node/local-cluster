@@ -1,0 +1,39 @@
+---
+- name: Namespace for bus platform
+  community.kubernetes.k8s:
+    state: "{{ bus_state }}"
+    name: "{{ namespace }}"
+    api_version: v1
+    kind: Namespace
+
+- name: Bus service
+  community.kubernetes.k8s:
+    state: "{{ bus_state }}"
+    namespace: "{{ namespace }}"
+    # definition: "{{ lookup('template', item) | from_yaml }}"
+    template: "{{ item }}"
+  with_items:
+    # - aliyun-cs.yml.j2
+    - "bus-admin-{{ bus_admin_template }}.yml.j2"
+    - bus-auth.yml.j2
+    - bus-chart-consumer.yml.j2
+    - bus-chart-sync.yml.j2
+    - bus-chart.yml.j2
+    - bus-core-consumer.yml.j2
+    - bus-core-daemon.yml.j2
+    - bus-core-producer.yml.j2
+    - bus-core-task.yml.j2
+    - bus-core.yml.j2
+    - bus-log-consumer.yml.j2
+    - bus-log.yml.j2
+    - bus-op-consumer.yml.j2
+    - bus-op-producer.yml.j2
+    - bus-op.yml.j2
+    - bus-op-init-stages.yml.j2
+    - bus-pile.yml.j2
+    - bus-pile-consumer.yml.j2
+    - bus-pile-producer.yml.j2
+    - bus-tbox.yml.j2
+    - ingress.yml.j2
+  tags:
+    - bus

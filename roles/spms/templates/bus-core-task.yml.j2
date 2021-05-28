@@ -1,0 +1,38 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: bus-core-task
+spec:
+  schedule: "23 * * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: bus-core-task
+              image: "registry.cn-hongkong.aliyuncs.com/36node/bus-core:{{ bus_core_version }}"
+              env:
+                - name: MANUAL_UPDATE
+                  value: "20210321"
+                - name: MONGODB_CONNECTION
+                  value: "{{ bus_core_mongodb }}"
+                - name: AUTH_BASE
+                  value: "{{ bus_auth_endpoint }}"
+                - name: AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: bus-auth
+                      key: auth_token
+                - name: BASE_NS
+                  value: "{{ bus_auth_ns }}"
+                - name: LOG_LEVEL
+                  value: info
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - "node dist/namespaces-syncer.js"

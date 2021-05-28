@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-log-consumer
+spec:
+  selector:
+    matchLabels:
+      app: bus-log-consumer
+  replicas: {{ bus_log_consumer_replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: bus-log-consumer
+        app: bus-log-consumer
+    spec:
+      containers:
+        - name: bus-log-consumer
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-log:{{ bus_log_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210321"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /log/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_log_mongodb }}"
+            - name: BATCH_SIZE
+              value: "300"
+            - name: BUFFER_TIME_MS
+              value: "5000"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-log-consumer"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: LOG_LEVEL
+              value: warn
+          command: ["npm"]
+          args: ["run", "consumer"]

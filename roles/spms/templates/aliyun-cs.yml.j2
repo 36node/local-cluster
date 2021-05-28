@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+metadata:
+  name: "aliyun-cs"
+data:
+  .dockerconfigjson: "{{ dockerconfig | tojson | b64encode }}"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+imagePullSecrets:
+  - name: aliyun-cs

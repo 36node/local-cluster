@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-core-daemon
+spec:
+  selector:
+    matchLabels:
+      app: bus-core-daemon
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: bus-core-daemon
+        app: bus-core-daemon
+        vector.dev/enable: "true"
+    spec:
+      containers:
+        - name: bus-core-daemon
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-core:{{ bus_core_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210321"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /core/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_core_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-core-daemon"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: KAFKA_EXT_EVENT_TOPIC
+              value: "{{ bus_ext_event_topic }}"
+            - name: PUSH_IOS_PRODUCTION
+              value: "false"
+            - name: STATISTICS_CACHE_PERIOD_S
+              value: "180"
+            - name: PUBLISHER_IDLE_DELAY_MS
+              value: "2000"
+            - name: PUBLISHER_VEHICLE_SNAPSHOT_INTERVAL_H
+              value: "3"
+            - name: TERMINAL_UPDATER_IDLE_DELAY_MS
+              value: "180000"
+            - name: REALTIME_THRESHOLD
+              value: "70"
+            - name: LOG_LEVEL
+              value: info
+          command: ["npm"]
+          args: ["run", "daemon"]

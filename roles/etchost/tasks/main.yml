@@ -1,0 +1,13 @@
+## 更新本机信息
+---
+- name: Update localhost /etc/hosts file
+  become: yes
+  throttle: 1
+  lineinfile:
+    dest: "/etc/hosts"
+    regexp: ".*\t{{ inventory_hostname }}.{{ cluster_domain }}\t{{ inventory_hostname }}"
+    line: "{{ ansible_host }}\t{{ inventory_hostname }}.{{ cluster_domain }}\t{{ inventory_hostname }}"
+    state: present
+    backup: no
+  delegate_to: "{{ delegate_node }}"
+  tags: etchosts

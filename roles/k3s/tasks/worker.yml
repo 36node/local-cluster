@@ -1,0 +1,17 @@
+---
+- name: Check worker node exists
+  shell: kubectl get node | grep "^{{ inventory_hostname }}"
+  register: check_result
+  failed_when: false
+  changed_when: false
+  delegate_to: localhost
+
+- name: Setup worker node
+  command: k3sup join \
+    --ip {{ ansible_host }} \
+    --server-ip {{ hostvars[groups[master_group][0]]['ansible_host'] }} \
+    --ssh-key {{ ansible_ssh_private_key_file }} \
+    --user "{{ ansible_user }}"
+  register: worker_created
+  delegate_to: localhost
+  when: check_result.rc == 1

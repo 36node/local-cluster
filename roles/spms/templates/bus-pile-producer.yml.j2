@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-pile-producer
+spec:
+  selector:
+    matchLabels:
+      app: bus-pile-producer
+  replicas: {{ bus_pile_producer_replicas }}
+  template:
+    metadata:
+      labels:
+        name: bus-pile-producer
+        app: bus-pile-producer
+        vector.dev/enable: "true"
+    spec:
+      containers:
+        - name: bus-pile-producer
+          image: registry.cn-hongkong.aliyuncs.com/36node/bus-pile:{{ bus_pile_version }}
+          env:
+            - name: MANUAL_UPDATE
+              value: "20190723170000"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /pile/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_pile_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-pile-producer"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: KAFKA_EXT_EVENT_TOPIC
+              value: "{{ bus_ext_event_topic }}"
+            - name: PUBLISHER_IDLE_DELAY_MS
+              value: "2000"
+            - name: PUBLISHER_BATCH_SIZE
+              value: "100"
+            - name: LOG_LEVEL
+              value: info
+          command: ["npm"]
+          args: ["run", "producer"]

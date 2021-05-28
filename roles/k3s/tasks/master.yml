@@ -1,0 +1,98 @@
+---
+- name: Set net.ipv4.ip_forward=1
+  become: yes
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Create kubeconfig directory
+  file:
+    path: ~/.kube
+    state: directory
+  delegate_to: localhost
+
+- name: Check API availability of master
+  uri:
+    url: "https://{{ ansible_host }}:6443"
+    method: GET
+    validate_certs: False
+  register: k8s_api_result
+  failed_when: false
+  delegate_to: localhost
+
+- name: Init cluster
+  command: k3sup install \
+    --ip "{{ ansible_host }}" \
+    --user "{{ ansible_user }}" \
+    --context {{ k8s_cluster_name }} \
+    --local-path ~/.kube/config.{{ k8s_cluster_name }} \
+    --k3s-extra-args '--tls-san {{ k8s_lb }} --node-label svccontroller.k3s.cattle.io/enablelb=true' \
+    --ssh-key {{ ansible_ssh_private_key_file }} \
+    --cluster
+  when: inventory_hostname == groups[master_group][0] and k8s_api_result.status == -1
+  register: first_master_created
+  delegate_to: localhost
+
+- name: Check API availability of first master
+  uri:
+    url: "https://{{ ansible_host }}:6443"
+    method: GET
+    validate_certs: False
+    status_code: "401"
+    body_format: json
+  register: http_api_result
+  retries: 6
+  delay: 15
+  until: http_api_result is not failed
+  when: inventory_hostname == groups[master_group][0] and first_master_created is changed
+  delegate_to: localhost
+
+- name: Update kubeconfig
+  ansible.builtin.replace:
+    path: "~/.kube/config.{{ k8s_cluster_name }}"
+    regexp: "https://{{ ansible_host }}:6443"
+    replace: "https://{{ k8s_lb }}:6443"
+  when: inventory_hostname == groups[master_group][0]
+  register: kubeconfig_updated
+  delegate_to: localhost
+
+- name: Merge kubeconfig
+  block:
+    - shell: "KUBECONFIG=~/.kube/config.{{ k8s_cluster_name }}:~/.kube/config kubectl config view --flatten > /tmp/kubeconfig"
+    - shell: mv /tmp/kubeconfig ~/.kube/config
+    - ansible.builtin.file:
+        path: ~/.kube/config
+        mode: "0600"
+  when: inventory_hostname == groups[master_group][0] and kubeconfig_updated is changed
+  delegate_to: localhost
+
+- name: Setup other masters
+  throttle: 1
+  command: k3sup join \
+    --ip "{{ ansible_host }}" \
+    --user "{{ ansible_user }}" \
+    --server-user "{{ ansible_user }}" \
+    --server-ip {{ hostvars[groups[master_group][0]]['ansible_host'] }} \
+    --k3s-extra-args '--tls-san {{ k8s_lb }} --node-label svccontroller.k3s.cattle.io/enablelb=true' \
+    --ssh-key {{ ansible_ssh_private_key_file }} \
+    --server
+  when: inventory_hostname != groups[master_group][0] and k8s_api_result.status == -1
+  register: master_created
+  delegate_to: localhost
+
+- name: Check API availability of other master
+  uri:
+    url: "https://{{ ansible_host }}:6443"
+    method: GET
+    validate_certs: False
+    status_code: "401"
+    body_format: json
+  register: http_api_result
+  retries: 6
+  delay: 15
+  until: http_api_result is not failed
+  when: inventory_hostname != groups[master_group][0] and master_created is changed
+  delegate_to: localhost

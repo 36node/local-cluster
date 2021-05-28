@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bus-op-producer
+spec:
+  selector:
+    matchLabels:
+      app: bus-op-producer
+  replicas: {{ bus_op_producer_replicas }}
+  template:
+    metadata:
+      labels:
+        name: bus-op-producer
+        app: bus-op-producer
+    spec:
+      containers:
+        - name: bus-op-producer
+          image: "registry.cn-hongkong.aliyuncs.com/36node/bus-op:{{ bus_op_version }}"
+          env:
+            - name: MANUAL_UPDATE
+              value: "20210321"
+            - name: PORT
+              value: "3000"
+            - name: BASE
+              value: /op/v0
+            - name: MONGODB_CONNECTION
+              value: "{{ bus_op_mongodb }}"
+            - name: KAFKA_BROKER_LIST
+              value: "{{ kafka_bootstrap_server }}"
+            - name: KAFKA_GROUP_ID
+              value: "{{ namespace }}-bus-op-producer"
+            - name: KAFKA_TBOX_TOPIC
+              value: "{{ bus_tbox_topic }}"
+            - name: KAFKA_EVENT_TOPIC
+              value: "{{ bus_event_topic }}"
+            - name: PUBLISHER_IDLE_DELAY_MS
+              value: "1000"
+            - name: PUBLISHER_TICKET_SNAPSHOT_INTERVAL_H
+              value: "1"
+            - name: PUBLISHER_TICKET_SNAPSHOT_MAX_LIMIT
+              value: "1000"
+            - name: PUBLISHER_ALERT_SNAPSHOT_INTERVAL_H
+              value: "1"
+            - name: PUBLISHER_ALERT_SNAPSHOT_MIN_LEVEL
+              value: "1"
+            - name: PUBLISHER_ALERT_SNAPSHOT_MAX_LIMIT
+              value: "3000"
+            - name: LOG_LEVEL
+              value: info
+          command: ["npm"]
+          args: ["run", "producer"]

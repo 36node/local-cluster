@@ -1,0 +1,32 @@
+---
+- name: Create user
+  ansible.builtin.user:
+    state: present
+    name: "{{ user }}"
+    generate_ssh_key: "{{ generate_ssh_key }}"
+    ssh_key_file: .ssh/id_rsa
+    shell: "{{ shell }}"
+
+- name: Add login key
+  ansible.posix.authorized_key:
+    state: present
+    user: "{{ user }}"
+    key: "{{ pub_key }}"
+
+- name: Copy generated pub key
+  ansible.builtin.slurp:
+    src: "{{ '/home/' + user + '/.ssh/id_rsa.pub' }}"
+  register: slurp_result
+  when: generate_ssh_key
+
+- name: Set facts
+  set_fact:
+    "user_pub_key_{{ user }}": "{{ slurp_result['content'] | b64decode }}"
+  when: generate_ssh_key
+
+- name: Add sudoers users to wheel group
+  ansible.builtin.user:
+    name: "{{ user }}"
+    groups: wheel
+    append: yes
+  when: sudo_enable

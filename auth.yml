@@ -1,0 +1,28 @@
+## 集群重新授权
+## yarn auth -e reset=true --private-key ~/.ssh/id_rsa_old
+
+## 如果集群最开始是 密码 方式登录，需要安装，记得在 hosts 中调整一下授权方式
+## sudo pip3 install paramiko
+## yarn auth -e reset=true --ask-pass -c paramiko
+---
+- name: Authorize cluster key
+  hosts: k8s
+  tasks:
+    - name: Set cluster key
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', 'pub_keys/id_rsa_walle.pub') }}"
+        exclusive: "{{ reset | default('no') }}"
+    - name: Disable login through password
+      user:
+        name: "{{ ansible_user }}"
+        password: "!"
+    - name: Upload other user's pubkey
+      ansible.posix.authorized_key:
+        state: present
+        user: "{{ ansible_user }}"
+        key: "{{ lookup('file', 'pub_keys/id_rsa_' + item + '.pub') }}"
+      with_items:
+        - lidong
+        - zzs

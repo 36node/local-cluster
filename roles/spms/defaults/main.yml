@@ -1,0 +1,68 @@
+---
+namespace: pudongair
+bus_state: present
+
+mongodb_replicaset: rs0
+mongodb_connection: mongodb://root:it_is_a_secret@mongodb-0.mongodb-headless.data,mongodb-1.mongodb-headless.data,mongodb-2.mongodb-headless.data
+kafka_bootstrap_server: kafka.data:9092
+elasticsearch_endpoint: http://elasticsearch-coordinating-only.data:9200
+
+bus_admin_template: shanghaibus
+bus_admin_title: "公交监控系统"
+bus_admin_version: latest
+bus_amap_center: "121.806482,31.146809"
+bus_auth_endpoint: "https://api.stargate.36node.com/auth/v0"
+bus_auth_jwt: "jwt token required here"
+bus_auth_ns: /bus/shanghai/pd-airport
+bus_auth_provider: 5dc3beadccf89e00123c4dcc
+bus_chart_consumer_replicas: 2
+bus_chart_endpoint: https://api.bus.36node.com/chart/v0
+bus_chart_es_index_suffix: chart-pudongair
+bus_chart_mongodb: "{{ mongodb_connection }}/{{ namespace }}-bus-chart?authSource=admin&replicaSet={{ mongodb_replicaset }}"
+bus_chart_replicas: 2
+bus_chart_version: latest
+bus_core_consumer_replicas: 2
+bus_core_endpoint: https://api.bus.36node.com/core/v0
+bus_core_mongodb: "{{ mongodb_connection }}/{{ namespace }}-bus-core?authSource=admin&replicaSet={{ mongodb_replicaset }}"
+bus_core_producer_replicas: 2
+bus_core_replicas: 2
+bus_core_version: latest
+bus_event_topic: event
+bus_ext_event_topic: ext-event
+bus_log_consumer_replicas: 2
+bus_log_endpoint: https://api.bus.36node.com/log/v0
+bus_log_ws_endpoint: https://api.bus.36node.com/log/v0/ws
+bus_log_mongodb: "{{ mongodb_connection }}/{{ namespace }}-bus-log?authSource=admin&replicaSet={{ mongodb_replicaset }}"
+bus_log_replicas: 2
+bus_log_version: latest
+bus_logo: "https://36node-misc.oss-cn-beijing.aliyuncs.com/bus/logo_pudong_airport.png"
+bus_op_consumer_replicas: 2
+bus_op_endpoint: https://api.bus.36node.com/op/v0
+bus_op_mongodb: "{{ mongodb_connection }}/{{ namespace }}-bus-op?authSource=admin&replicaSet={{ mongodb_replicaset }}"
+bus_op_producer_replicas: 2
+bus_op_replicas: 2
+bus_op_version: latest
+bus_pile_replicas: 2
+bus_pile_consumer_replicas: 2
+bus_pile_endpoint: https://api.bus.36node.com/pile/v0
+bus_pile_mongodb: "{{ mongodb_connection }}/{{ namespace }}-bus-pile?authSource=admin&replicaSet={{ mongodb_replicaset }}"
+bus_pile_producer_replicas: 1
+bus_pile_version: latest
+bus_producers_ns: "申龙:/bus/producer/shenlong;申沃:/bus/producer/shenwo;万象:/bus/producer/wanxiang;宇通:/bus/producer/yutong;青年:/bus/producer/qingnian"
+bus_tbox_auth: "yutong:121,shenwo:361,shenlong:777666,wanxiang:666888,wushiling:314159"
+bus_tbox_es_index: "logstash-tbox-*"
+bus_tbox_port: 1024
+bus_tbox_replicas: 2
+bus_tbox_topic: tbox
+bus_tbox_version: latest
+
+aliyuncs:
+  username: walle@36node
+  password: wrong
+
+dockerconfig:
+  auths:
+    registry.*.aliyuncs.com:
+      username: "{{ aliyuncs.username }}"
+      password: "{{ aliyuncs.password }}"
+      auth: "{{ (aliyuncs.username + ':' + aliyuncs.password) | b64encode }}"
